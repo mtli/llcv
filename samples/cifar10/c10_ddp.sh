@@ -9,7 +9,8 @@ nGPU=4
 
 python -m torch.distributed.launch \
 	--nproc_per_node $nGPU \
- 	tools/train.py \
+	--module \
+ 	llcv.tools.train \
 	--exp-dir "${dataDir}/Exp/CIFAR-10/train/${expName}" \
 	--dataset CIFAR10 \
 	--data-root "${dataDir}/SmallDB/CIFAR-10" \
@@ -22,7 +23,8 @@ python -m torch.distributed.launch \
   && \
 python -m torch.distributed.launch \
 	--nproc_per_node $nGPU \
-	tools/test.py \
+	--module \
+ 	llcv.tools.test \
 	--exp-dir "${dataDir}/Exp/CIFAR-10/train/${expName}" \
 	--dataset CIFAR10 \
 	--data-root "${dataDir}/SmallDB/CIFAR-10" \
