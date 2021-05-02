@@ -57,7 +57,7 @@ Note that latency and throughput are measured on Geforce GTX 1080 Ti GPUs, unles
 ### CIFAR-10 (Classification)
 | ID  |    Method    | Epochs | Top-1  | E2E Lat (ms) | Inf Lat (ms) | Train BS | Train TP | Train Time | Ckpt | Log | Script |
 | :-: | :----------: | :----: | :----: | :----------: | :----------: | :------: | :------: | :--------: | :--: | :-: | :----: |
-| 1   | ResNet-18    |    200 | 95.62% |            - | 3.05 ± 0.302 |      128 |   2081Hz |      1h22m | ckpt | log | [script](samples/cifar10/c10.sh) |
+| 1   | ResNet-18    |    200 | 95.62% |            - | 3.05 ± 0.302 |      128 |   2081Hz |      1h22m | [ckpt](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.pth) | [log](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.log) | [script](samples/cifar10/c10.sh) |
 
 In the above table, timings are measured on a single GPU for both training and testing.
 
@@ -66,7 +66,7 @@ In the above table, timings are measured on a single GPU for both training and t
 ### ImageNet (Classification)
 | ID |    Method     |  Top-1 (%) | Top-5 (%) | E2E Lat (ms) |  Inf Lat (ms) | Train BS | Train TP | Train Time | Epochs | Ckpt | Log | Script |
 | :--: | :----------: | :-----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: | :------: | :--------: | :--------: |
-|1| ResNet-50 | 76.56 | 93.02 | - | 9.82 ± 3.59 | 256 | 504.8Hz | 2d16h | 90 | ckpt | log | [script](samples/imagenet/im_r50.sh) |
+|1| ResNet-50 | 76.56 | 93.02 | - | 9.82 ± 3.59 | 256 | 504.8Hz | 2d16h | 90 | [ckpt](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/im-r50-e90-76.56-870a16f.pth) | [log](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/im-r50-e90-76.56-870a16f.log) | [script](samples/imagenet/im_r50.sh) |
 
 In the above table, timings are measured on 4 GPUs for training and a single GPU for testing.
 
