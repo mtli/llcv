@@ -70,6 +70,8 @@ In the above table, timings are measured on a single GPU for both training and t
 
 In the above table, timings are measured on 4 GPUs for training and a single GPU for testing.
 
+<br>
+
 ### COCO (Detection)
 
 | ID  |    Method    | Epc |  AP  | E2E (ms) |  Inf (ms) | Train BS | Train TP | Train Time | Ckpt | Log | Script |
