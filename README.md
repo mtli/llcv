@@ -55,9 +55,9 @@ Note that latency and throughput are measured on Geforce GTX 1080 Ti GPUs, unles
 <br>
 
 ### CIFAR-10 (Classification)
-| ID  |    Method    | Epc | Top-1  | E2E (ms) | Inf (ms) | Train BS | Train TP | Train Time | Ckpt | Log | Script |
+| ID  |    Method    | Epc | Top-1 (%)  | E2E (ms) | Inf (ms) | Train BS | Train TP | Train Time | Ckpt | Log | Script |
 | :-: | :----------: | :-: | :----: | :------: | :------: | :------: | :------: | :--------: | :--: | :-: | :----: |
-| 1   | ResNet-18    | 200 | 95.62% |        - | 3.05 ± 0.302 |  128 |   2081Hz |      1h22m | [ckpt](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.pth) | [log](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.log) | [script](samples/cifar10/c10.sh) |
+| 1   | ResNet-18    | 200 | 95.62 |        - | 3.05 ± 0.302 |  128 |   2081Hz |      1h22m | [ckpt](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.pth) | [log](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.log) | [script](samples/cifar10/c10.sh) |
 
 In the above table, timings are measured on a single GPU for both training and testing.
 
