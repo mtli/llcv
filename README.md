@@ -55,25 +55,25 @@ Note that latency and throughput are measured on Geforce GTX 1080 Ti GPUs, unles
 <br>
 
 ### CIFAR-10 (Classification)
-| ID  |    Method    | Epochs | Top-1  | E2E Lat (ms) | Inf Lat (ms) | Train BS | Train TP | Train Time | Ckpt | Log | Script |
-| :-: | :----------: | :----: | :----: | :----------: | :----------: | :------: | :------: | :--------: | :--: | :-: | :----: |
-| 1   | ResNet-18    |    200 | 95.62% |            - | 3.05 ± 0.302 |      128 |   2081Hz |      1h22m | [ckpt](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.pth) | [log](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.log) | [script](samples/cifar10/c10.sh) |
+| ID  |    Method    | Epc | Top-1  | E2E (ms) | Inf (ms) | Train BS | Train TP | Train Time | Ckpt | Log | Script |
+| :-: | :----------: | :-: | :----: | :------: | :------: | :------: | :------: | :--------: | :--: | :-: | :----: |
+| 1   | ResNet-18    | 200 | 95.62% |        - | 3.05 ± 0.302 |  128 |   2081Hz |      1h22m | [ckpt](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.pth) | [log](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/c10-r18-e200-95.62-870a16f.log) | [script](samples/cifar10/c10.sh) |
 
 In the above table, timings are measured on a single GPU for both training and testing.
 
 <br>
 
 ### ImageNet (Classification)
-| ID |    Method     |  Top-1 (%) | Top-5 (%) | E2E Lat (ms) |  Inf Lat (ms) | Train BS | Train TP | Train Time | Epochs | Ckpt | Log | Script |
-| :--: | :----------: | :-----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: | :------: | :--------: | :--------: |
-|1| ResNet-50 | 76.56 | 93.02 | - | 9.82 ± 3.59 | 256 | 504.8Hz | 2d16h | 90 | [ckpt](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/im-r50-e90-76.56-870a16f.pth) | [log](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/im-r50-e90-76.56-870a16f.log) | [script](samples/imagenet/im_r50.sh) |
+| ID  |    Method    | Epc | Top-1 (%) | Top-5 (%) | E2E (ms) |  Inf (ms) | Train BS | Train TP | Train Time | Ckpt | Log | Script |
+| :-: | :----------: | :-: | :-------: | :-------: |:-------: | :-------: | :------: | :------: | :--------: | :--: | :-: | :----: |
+| 1   | ResNet-50    | 90  |     76.56 |     93.02 |        - | 9.82 ± 3.59 |    256 |  504.8Hz |      2d16h | [ckpt](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/im-r50-e90-76.56-870a16f.pth) | [log](https://www.cs.cmu.edu/~mengtial/proj/llcv/model_zoo/im-r50-e90-76.56-870a16f.log) | [script](samples/imagenet/im_r50.sh) |
 
 In the above table, timings are measured on 4 GPUs for training and a single GPU for testing.
 
 ### COCO (Detection)
 
-| ID  | Method | Epochs | AP | E2E Lat (ms) |  Inf Lat (ms) | Train BS | Train TP | Train Time  | Ckpt | Log | Script |
-| :-: | :------: | :----: | :----: | :----------: | :----------: | :------: | :------: | :--------: | :----: | :--: | :-: |
-| 1   | Faster R-CNN R50 FPN (torchvision)  | - | 37.0 | - | 75.2 ± 54.4 | - | - |  - | - | - | [script](samples/coco/coco_frcnn_test_pretrained.sh) |
+| ID  |    Method    | Epc |  AP  | E2E (ms) |  Inf (ms) | Train BS | Train TP | Train Time | Ckpt | Log | Script |
+| :-: | :----------: | :-: | :--: |:-------: | :-------: | :------: | :------: | :--------: | :--: | :-: | :----: |
+| 1   | Faster R-CNN R50 FPN (torchvision)  | - | 37.0 | - | 75.2 ± 54.4 | - | - |        - | -    | -   | [script](samples/coco/coco_frcnn_test_pretrained.sh) |
 
 In the above table, timings are measured on 8 GPUs for training and a single GPU for testing.
