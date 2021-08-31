@@ -67,7 +67,7 @@ def main():
     timing_only = False
     if args.inf_latency:
         logging.info(
-            'Timing mode is enabled. Please ensure that no other resource-intensive processes'
+            'Timing mode is enabled. Please ensure that no other resource-intensive processes '
             'are running on the same machine'
         )
         if args.timing_iter < n_test_itr:
