@@ -3,8 +3,11 @@ import torch.nn as nn
 from torch.nn.modules.batchnorm import _BatchNorm
 
 import torchvision.datasets as tv_datasets
-from torchvision.models.utils import load_state_dict_from_url
-
+try:
+    from torch.hub import load_state_dict_from_url
+except ImportError:
+    # old versions of torchvision
+    from torchvision.models.utils import load_state_dict_from_url
 
 class BasicBlock(nn.Module):
     expansion = 1

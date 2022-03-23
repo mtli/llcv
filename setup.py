@@ -46,6 +46,8 @@ setup(
         'pillow',
         'tensorboard',
         'linearlr',
+        'pycocotools',
+        'scipy',
     ],
     include_package_data = True,
 )

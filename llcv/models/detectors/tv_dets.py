@@ -1,5 +1,9 @@
 from torchvision.models import detection as tv_det_models
-from torchvision.models.utils import load_state_dict_from_url
+try:
+    from torch.hub import load_state_dict_from_url
+except ImportError:
+    # old versions of torchvision
+    from torchvision.models.utils import load_state_dict_from_url
 
 model_urls = {
     'resnet50': 'https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth',

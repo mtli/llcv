@@ -23,11 +23,6 @@ def add_args(parser):
     parser.add_argument('--lr', type=float, default=0.1,
         help='base learning rate (default: 0.1)')
 
-    # parser.add_argument('--data-root', type=str, default='D:/Data/SmallDB/CIFAR-10',
-    #     help='root directory of the dataset')
-    # parser.add_argument('--n-epoch', type=int, default=1,
-    #     help='# of epochs to train')
-
     ## Hyperparameters
     parser.add_argument('--optim', type=str, default='SGD',
         help='optimizer (default: SGD)')
