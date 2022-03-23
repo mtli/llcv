@@ -7,6 +7,8 @@ import numpy as np
 
 from pycocotools.cocoeval import COCOeval
 
+from torch import nn
+
 from .base_task import BaseTask
 
 
@@ -29,7 +31,12 @@ class DetTask(BaseTask):
 
     def forward(self, data):
         x_cpu, y_cpu = data
-        x = x_cpu.to(self.device)
+        if isinstance(self.model, nn.DataParallel):
+            # DataParallel's broadcast is much faster than
+            # manually moving data to the first GPU
+            x = x_cpu
+        else:
+            x = x_cpu.to(self.device)
 
         y_out = self.model(x)
 

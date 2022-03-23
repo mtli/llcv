@@ -57,7 +57,13 @@ class ClsTask(BaseTask):
 
     def forward(self, data):
         x_cpu, y_cpu = data
-        x, y = x_cpu.to(self.device), y_cpu.to(self.device)
+        if isinstance(self.model, nn.DataParallel):
+            # DataParallel's broadcast is much faster than
+            # manually moving data to the first GPU
+            x = x_cpu
+        else:
+            x = x_cpu.to(self.device)
+        y = y_cpu.to(self.device)
 
         y_out = self.model(x)
         self.loss = self.criterion(y_out, y)
