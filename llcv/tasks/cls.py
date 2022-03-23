@@ -4,8 +4,6 @@ from os.path import join
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 import torch.distributed as tdist
 from torch.utils.tensorboard import SummaryWriter
 
@@ -16,7 +14,7 @@ import numpy as np
 # from html4vision import Col, imagetable
 
 from .base_task import BaseTask
-from ..utils import AverageMeter, topk_accu
+from ..utils import AverageMeter, topk_accu, dist_cpu_gather, dist_gpu_gather
 
 
 class ClsTask(BaseTask):
@@ -25,8 +23,6 @@ class ClsTask(BaseTask):
         self.test_no_gt = hasattr(self.dataset, 'no_gt') and self.dataset.no_gt
         self.num_classes = len(self.dataset.classes)
         self.has_val_score = not self.test_no_gt
-        if self.rank >= 0:
-            self.world_size = tdist.get_world_size()
 
         if not self.test_no_gt:
             if not hasattr(args, 'loss') or args.loss is None:
@@ -123,45 +119,13 @@ class ClsTask(BaseTask):
             return
 
         if self.gpu_gather:
-            '''
-            Outputs might have different sizes due to imperfect data
-            slicing, so we need to first communicate to get the shapes
-            and then prepare the receiving buffer
-            '''
-
-            # synchronize about shapes
-            n_exp = torch.tensor(len(self.y_all), dtype=torch.long, device=self.device)
-            n_exp_list = [torch.empty_like(n_exp) for _ in range(self.world_size)]
-            tdist.all_gather(n_exp_list, n_exp)
-            n_exp_max = torch.tensor(n_exp_list).max()
-
-            # pad the outputs
-            y_all_padded = torch.empty((n_exp_max,), dtype=torch.long, device=self.device)
-            y_all_padded[:n_exp] = self.y_all
-            y_out_all_padded = torch.empty((n_exp_max, self.num_classes), dtype=torch.float, device=self.device)
-            y_out_all_padded[:n_exp] = self.y_out_all
-
-            # prepare the buffers
-            y_all_list = [torch.empty_like(y_all_padded) for _ in range(self.world_size)]
-            y_out_all_list = [torch.empty_like(y_out_all_padded) for _ in range(self.world_size)]
-
-            # communication
-            tdist.all_gather(y_all_list, self.y_all)
-            tdist.all_gather(y_out_all_list, self.y_out_all)
-
-            # remove the paddings
-            y_all_list = [padded[:n_exp] for n_exp, padded in zip(n_exp_list, y_all_list)]
-            y_out_all_list = [padded[:n_exp] for n_exp, padded in zip(n_exp_list, y_out_all_list)]
-
-            # merge together
-            self.y_all = torch.cat(y_all_list)
-            self.y_out_all = torch.cat(y_out_all_list)
+            gathered = dist_gpu_gather(self.y_all, self.y_out_all)
         else:
-            ''' Probably need to use the inelegant approach with temporary files
-            '''
-            raise NotImplementedError('CPU dist gather is not yet implemented. '
-                                      'Please enable --gpu-gather for now.')
+            gathered = dist_cpu_gather(self.y_all, self.y_out_all)
 
+        if self.rank == 0:
+            self.y_all, self.y_out_all = gathered
+        
     def get_test_scores(self, force_update=False):
         # the primary metric should be placed in the first place
         if force_update or self.accu_all is None:
