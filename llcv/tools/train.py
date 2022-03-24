@@ -151,7 +151,7 @@ def main():
                 ave_speed *= speed_ratio
 
                 task.log_iter(
-                    'train e%d: %4d/%4d, %5.4gHz' % 
+                    'train e%d: %4d/%4d, %5.4gHz, ' % 
                     (epoch, i, len(train_loader), ave_speed),
                     ', ETA: ' + get_eta(tmr_train.check(), n_iter_epoch + i, n_iter_total),
                 )
@@ -200,7 +200,7 @@ def main():
                     ave_speed *= speed_ratio
 
                     task.log_iter(
-                        'val e%d: %4d/%4d, %6.5gHz' % 
+                        'val e%d: %4d/%4d, %6.5gHz, ' % 
                         (epoch, i, len(val_loader), ave_speed),
                     )
 

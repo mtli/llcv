@@ -116,7 +116,7 @@ def main():
                 ave_speed = (n_seen - n_warpup)/(t_total - t_warmup)if (t_total - t_warmup) else float('inf')
             ave_speed *= speed_ratio
 
-            prefix = 'test: %4d/%4d, %5.4gHz' % (i, n_test_itr, ave_speed)
+            prefix = 'test: %4d/%4d, %5.4gHz, ' % (i, n_test_itr, ave_speed)
             if args.inf_latency:
                 start = 0 if i <= args.timing_warmup_iter else args.timing_warmup_iter
                 prefix += ', %5.4gms' % \

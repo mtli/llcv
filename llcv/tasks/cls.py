@@ -81,7 +81,7 @@ class ClsTask(BaseTask):
         self.optim.step()
 
     def log_iter(self, str_prefix='', str_suffix=''):
-        logging.info(f'{str_prefix}, loss: {self.loss.item():5.3g}, top-1: {self.accu[0]:5.4g}%, top-5: {self.accu[1]:5.4g}%{str_suffix}')
+        logging.info(f'{str_prefix}loss: {self.loss.item():5.3g}, top-1: {self.accu[0]:5.4g}%, top-5: {self.accu[1]:5.4g}%{str_suffix}')
 
     def log_iter_tb(self, total_iter, is_train):
         if self.rank > 0:
@@ -96,7 +96,7 @@ class ClsTask(BaseTask):
     def log_epoch(self, str_prefix='', str_suffix=''):
         if self.gather:
             accu = self.get_test_scores()
-            logging.info(f'{str_prefix}, loss: {self.avg_loss.avg():5.3g}, top-1: {accu[0]:5.4g}%, top-5: {accu[1]:5.4g}%{str_suffix}')
+            logging.info(f'{str_prefix}loss: {self.avg_loss.avg():5.3g}, top-1: {accu[0]:5.4g}%, top-5: {accu[1]:5.4g}%{str_suffix}')
         else:
             logging.info(str_prefix + str_suffix)
 

@@ -1,4 +1,4 @@
-# LLCV &mdash; An Extensible Framework for **L**ow-**L**atency **C**omputer **V**ision Research (Experimental)
+# LLCV &mdash; An Extensible Framework for **L**ow-**L**atency **C**omputer **V**ision Research
 
 
 ![#fc4903](https://via.placeholder.com/15/fc4903/000000?text=+) Research-oriented &mdash; flexible interfaces and dynamic modules
