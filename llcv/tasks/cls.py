@@ -118,10 +118,8 @@ class ClsTask(BaseTask):
         if self.rank < 0 or not self.gather:
             return
 
-        if self.gpu_gather:
-            gathered = dist_gpu_gather(self.y_all, self.y_out_all)
-        else:
-            gathered = dist_cpu_gather(self.y_all, self.y_out_all)
+        dist_func = dist_gpu_gather if self.gpu_gather else dist_cpu_gather
+        gathered = dist_func((self.y_all, self.y_out_all), len(self.dataset))
 
         if self.rank == 0:
             self.y_all, self.y_out_all = gathered
@@ -156,11 +154,6 @@ class ClsTask(BaseTask):
             logging.info(f'Saving evaluation to {out_path}')
             json.dump(out_dict, open(out_path, 'w'))
 
-            if self.rank == 0:
-                logging.warning('Currently, the saved outputs '
-                    'under distributed testing are not in order. '
-                    'Please disable distributed testing if the '
-                    'order matters to you.')
             pred_all = self.y_out_all.max(1)[1].cpu()
             out_path = join(out_dir, 'pred.txt')
             logging.info(f'Saving predictions to {out_path}')

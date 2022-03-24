@@ -55,11 +55,40 @@ def dist_get_info():
         'local rank': environ.get('LOCAL_RANK'),
     }
 
-def dist_cpu_gather(*variables, tmp_dir=None):
+def _reorder_sliced_data(buffers, dataset_size):
+    '''
+    Undo the slicing done by torch.utils.data.distributed.DistributedSampler
+    For example, for distributed world of size 4, these are the data
+    processed by each rank:
+    rank 0: [0, 4, 8, ...]
+    rank 1: [1, 5, 9, ...]
+    rank 2: [2, 6, 10, ...]
+    rank 3: [3, 7, 11, ...]
+
+    This function assumes that the data loader sampler uses
+    DistributedSampler or the same logic as in DistributedSampler to slice
+    the data. Also it removes padded examples by DistributedSampler
+    according to the input dataset_size.
+
+    buffers: [buf_rank0, buf_rank1, ...]
+
+    '''
+    var_ordered = []
+    for var_parts in zip(*buffers):
+        var_ordered.extend(list(var_parts))
+    return var_ordered[:dataset_size]
+
+def dist_cpu_gather(variables, dataset_size, tmp_dir=None):
     '''
     Gather variables from all ranks and concatenate them along the batch
     dimension. CPU gather makes use of temporary files. The variables
-    can be on either CPU or GPU.
+    can be on either the CPU or the GPU. The output variables are on the
+    CPU. This function assumes
+    torch.utils.data.distributed.DistributedSampler is used in the data
+    loader for data sampling. Specifically, the examples indices
+    should be duplicated to ensure the same number of examples across
+    all ranks in an epoch, and the data slicing should follow this
+    logic: [rank: dataset_size: world_size].
     '''
 
     rank = dist_get_rank()
@@ -109,62 +138,50 @@ def dist_cpu_gather(*variables, tmp_dir=None):
     # wait for all ranks to finish saving
     tdist.barrier()
 
-    if rank == 0:
-        gathered_vars = [[v] for v in variables]
-        for i in range(1, world_size):
-            vars_part = torch.load(f'rank{i}.pth')
-            for v1, v2 in zip(gathered_vars, vars_part):
-                v1.append(v2)
-        # the tmp dir is no longer needed
-        rmtree(tmp_dir)
-        for i, vars_all in enumerate(gathered_vars):
-            gathered_vars[i] = torch.cat(vars_all)
-        return gathered_vars
-    else:
+    if rank != 0:
         return None
 
-def dist_gpu_gather(*variables):
+    buffers = [[v.cpu()] + (world_size-1)*[None] for v in variables]
+    for i in range(1, world_size):
+        vars_part = torch.load(f'rank{i}.pth', map_location='cpu')
+        for v_buf, var_part in zip(buffers, vars_part):
+            v_buf[i] = var_part
+
+    # the tmp dir is no longer needed
+    rmtree(tmp_dir)
+
+    # restore the original dataset order
+    gathered_vars = []
+    for v_buf in buffers:
+        # restore the original dataset order
+        v_ordered = _reorder_sliced_data(v_buf, dataset_size)
+        # bring back the batch dimension and concatenate
+        gathered_vars.append(torch.cat([x.unsqueeze(0) for x in v_ordered]))
+
+    return gathered_vars
+
+def dist_gpu_gather(variables, dataset_size):
     '''
     Gather variables from all ranks and concatenate them along the batch
     dimension. GPU gather makes use of collective operations. All
-    variables must be on the GPU. Note that due to potential uneven data
-    slicing among distributed processes, we need to first communicate to
-    get the number of examples held by each process before allocating
-    the receiving buffers.
+    variables must be on the GPU. This function makes the same
+    assumption about data sampling as in dist_cpu_gather().
     '''
-
-    world_size = tdist.get_world_size()
-
-    n_exp = len(variables[0])
-    device = variables[0].device
-
-    # synchronize about the number of examples
-    n_exp = torch.tensor(n_exp, dtype=torch.long, device=device)
-    n_exp_list = [torch.empty_like(n_exp) for _ in range(world_size)]
-    tdist.all_gather(n_exp_list, n_exp)
-    n_exp_max = torch.tensor(n_exp_list).max()
-
-    # pad the variables according to the max number of examples so that they
-    # are of the same shape on all processes
-    vars_padded = []
-    for v in variables:
-        v_padded = torch.empty((n_exp_max, *v.shape[1:]), dtype=v.dtype, device=device)
-        v_padded[:n_exp] = v
-        vars_padded.append(v_padded)
-
     # TODO：seralize (packing) all variables before communication
 
     # In theory, gathering needs only to be done on rank 0. But NCCL only
     # supports all_gather(), not gather(). Therefore we gather on all ranks here.
+    world_size = tdist.get_world_size()
     gathered_vars = []
-    for v_padded in vars_padded:
+    for v in variables:
         # allocate the buffers
-        buffers = [torch.empty_like(v_padded) for _ in range(world_size)]
+        v_buf = [torch.empty_like(v) for _ in range(world_size)]
         # communicate
-        tdist.all_gather(buffers, v_padded)
-        # remove the paddings
-        vars_all = [v_padded[:n_exp] for n_exp, v_padded in zip(n_exp_list, buffers)]
-        gathered_vars.append(torch.cat(vars_all))
+        tdist.all_gather(v_buf, v)
+        # restore the original dataset order
+        v_ordered = _reorder_sliced_data(v_buf, dataset_size)
+        # bring back the batch dimension and concatenate
+        gathered_vars.append(torch.cat([x.unsqueeze(0) for x in v_ordered]))
 
     return gathered_vars
     

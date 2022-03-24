@@ -87,7 +87,7 @@ def main():
             break
 
         # the last batch can be smaller than normal
-        this_batch_size = len(data[0])
+        this_batch_size = len(data[0]) if isinstance(data, tuple) else len(data)
 
         if args.inf_latency:
             torch.cuda.synchronize()

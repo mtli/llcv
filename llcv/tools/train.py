@@ -125,7 +125,7 @@ def main():
         for i, data in enumerate(train_loader):
             i += 1
             # the last batch can be smaller than normal
-            this_batch_size = len(data[0])
+            this_batch_size = len(data[0]) if isinstance(data, tuple) else len(data)
 
             tmr_iter = Timer()
             task.forward(data)
@@ -177,7 +177,7 @@ def main():
             tmr_val = Timer()
             for i, data in enumerate(val_loader):
                 i += 1
-                this_batch_size = len(data[0])
+                this_batch_size = len(data[0]) if isinstance(data, tuple) else len(data)
                 
                 tmr_iter = Timer()
                 with torch.no_grad():
