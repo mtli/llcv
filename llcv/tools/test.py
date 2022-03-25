@@ -99,7 +99,7 @@ def main():
         if args.inf_latency:
             torch.cuda.synchronize()
             tmr_iter.stop()
-            timing_samples[i-1] = tmr_iter.elapsed()
+            timing_samples[i - 1] = tmr_iter.elapsed()
 
         n_seen += this_batch_size
 
@@ -119,7 +119,7 @@ def main():
             prefix = 'test: %4d/%4d, %5.4gHz, ' % (i, n_test_itr, ave_speed)
             if args.inf_latency:
                 start = 0 if i <= args.timing_warmup_iter else args.timing_warmup_iter
-                prefix += ', %5.4gms' % \
+                prefix += '%5.4gms, ' % \
                     (1e3*timing_samples[start:i].mean())
             task.log_iter(prefix,  ', ETA: ' + get_eta(t_total, i, n_test_itr))
 

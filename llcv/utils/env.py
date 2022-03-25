@@ -161,6 +161,8 @@ def get_default_parser(*args, **kwargs):
         help='log level (default: INFO)')
     parser.add_argument('--seed', type=int, default=None,
         help='random seed (default: None)')
+    parser.add_argument('--shuffle', action='store_true', default=False,
+        help='force shuffle even during testing (useful for timing)')
     parser.add_argument('--no-cuda', action='store_false', dest='cuda', default=True,
         help='disable CUDA')
     parser.add_argument('--gpu-gather', action='store_true',

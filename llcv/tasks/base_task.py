@@ -224,19 +224,29 @@ class BaseTask(metaclass=ABCMeta):
         '''
         Automatically finding out which model to load given the arguments
         '''
+        self.resume_epoch = 0
         strict = args.load_strict
         if self.is_train:
-            self.resume_epoch = 0
-            saves = glob(join(args.exp_dir, 'e*.pth'))
-            if saves:
-                # previously trained, loading the latest model
-                self.resume_epoch = max([int(basename(s).split('.')[0][1:]) for s in saves])
-                ckpt_path = join(self.exp_dir, 'e%03d.pth' % self.resume_epoch)
-                logging.warning('Resume training from the latest model ' + ckpt_path)
-                self.load(ckpt_path, strict)
-            elif args.pretrain:
-                logging.info('Loading pretrained model ' + args.pretrain)
-                self.load(args.pretrain, strict)
+            if args.resume_epoch is not None:
+                self.resume_epoch = args.resume_epoch
+                if args.resume_load:
+                    ckpt_path = join(self.exp_dir, 'e%03d.pth' % self.resume_epoch)
+                    logging.warning('Resume training from ' + ckpt_path)
+                    self.load(ckpt_path, strict)
+                elif args.pretrain:
+                    logging.info('Loading pretrained model ' + args.pretrain)
+                    self.load(args.pretrain, strict)
+            else:
+                saves = glob(join(args.exp_dir, 'e*.pth'))
+                if saves:
+                    # previously trained, loading the latest model
+                    self.resume_epoch = max([int(basename(s).split('.')[0][1:]) for s in saves])
+                    ckpt_path = join(self.exp_dir, 'e%03d.pth' % self.resume_epoch)
+                    logging.warning('Resume training from ' + ckpt_path)
+                    self.load(ckpt_path, strict)
+                elif args.pretrain:
+                    logging.info('Loading pretrained model ' + args.pretrain)
+                    self.load(args.pretrain, strict)
         else:
             if args.test_init:
                 return
@@ -260,6 +270,9 @@ class BaseTask(metaclass=ABCMeta):
                     ckpt_path = join(self.exp_dir, 'e%03d.pth' % self.resume_epoch)
                     logging.info(f'Loading the latest model from {ckpt_path}')
             self.load(ckpt_path, strict)
+
+        if self.resume_epoch is None:
+            self.resume_epoch = 0
 
     def summarize_timing(self, timing_type, samples, n_warmup, out_dir):
         assert len(samples) > n_warmup, 'Not enough timing samples after warming up'

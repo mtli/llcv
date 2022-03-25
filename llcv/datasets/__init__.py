@@ -62,7 +62,7 @@ def build_loader(args, is_train):
         dataset,
         batch_size=batch_size,
         sampler=sampler,
-        shuffle=is_train and sampler is None,
+        shuffle=(is_train and sampler is None) or args.shuffle,
         num_workers=n_worker,
     )
 

@@ -46,12 +46,17 @@ def add_args(parser):
         help='DANGER: purge the exp_dir and start a fresh new training run')
     parser.add_argument('--pretrain', type=str, default=None,
         help='pretrained weights')
+    parser.add_argument('--resume-epoch', type=int, default=None,
+        help='by default, the resume epoch is automatically determined from '
+             'the checkpoint file and this option overwrites the default')
+    parser.add_argument('--no-resume-load', action='store_false', dest='resume_load', default=True,
+        help='resume from an epoch, but not load the checkpoint')
     parser.add_argument('--batch-size-per-gpu', type=int, default=None,
         help='alternative to batch_size (and overrides it)')
     parser.add_argument('--n-worker-per-gpu', type=int, default=None,
         help='alternative n_worker (and overrides it)')
-    parser.add_argument('--epoch-size', type=int, default=float('inf'),
-        help='maximum # of examples per epoch')
+    parser.add_argument('--epoch-iter', type=int, default=float('inf'),
+        help='maximum # of iterations per epoch')
     parser.add_argument('--no-val', action='store_false', dest='val', default=True,
         help='turn off validation')
     parser.add_argument('--log-interval', type=int, default=50,
@@ -81,11 +86,12 @@ def main():
     n_train = len(train_loader.dataset)
     logging.info(f'# of training examples: {n_train}')
     assert n_train
-    if args.epoch_size < n_train:
-        logging.warning(f'Epoch size ({args.epoch_size}) is set to smaller than the # of training examples')
-        train_epoch_size = args.epoch_size
+    if args.epoch_iter < len(train_loader):
+        logging.warning(
+            f'The number of iterations per epoch is limited to {args.epoch_iter}')
+        train_epoch_iter = args.epoch_iter
     else:
-        train_epoch_size = n_train
+        train_epoch_iter = len(train_loader)
 
     if args.val:
         val_loader = build_loader(args, is_train=False)
@@ -108,9 +114,11 @@ def main():
             best_score = best_epoch = 0
 
     ## Start training
-    last_saved_epoch = 0
+    last_saved_epoch = task.resume_epoch # resume_epoch is by default 0
+    # counters for ETA
     n_iter_epoch = 0
-    n_iter_total = (args.n_epoch - task.resume_epoch)*len(train_loader)
+    n_iter_total = (args.n_epoch - task.resume_epoch)*train_epoch_iter
+    # scaling factor for DDP
     speed_ratio = dist_get_world_size()
     
     logging.info('Training starts')
@@ -152,15 +160,16 @@ def main():
 
                 task.log_iter(
                     'train e%d: %4d/%4d, %5.4gHz, ' % 
-                    (epoch, i, len(train_loader), ave_speed),
-                    ', ETA: ' + get_eta(tmr_train.check(), n_iter_epoch + i, n_iter_total),
+                    (epoch, i, train_epoch_iter, ave_speed),
+                    ', ETA: ' + get_eta(tmr_train.check(), n_iter_epoch + i, n_iter_total)
                 )
+                  
                 task.log_iter_tb(
-                    (epoch-1)*len(train_loader) + i,
+                    (epoch-1)*train_epoch_iter + i,
                     is_train=True,
                 )
 
-            if n_seen >= train_epoch_size:
+            if i >= train_epoch_iter:
                 break
 
         task.dist_gather(is_train=True)
@@ -218,9 +227,12 @@ def main():
             task.reset_epoch()
 
         tmr_epoch.stop()
-        logging.info('end of epoch %d/%d: epoch time: %s, ETA: %s' %
+        logging.info('end of epoch %d/%d: epoch time: %s, epoch-based ETA: %s' %
                 (epoch, args.n_epoch, tmr_epoch.elapsed(to_str=True),
-                get_eta(tmr_train.check(), epoch, args.n_epoch))
+                get_eta(tmr_train.check(),
+                    epoch - task.resume_epoch,
+                    args.n_epoch - task.resume_epoch,
+                ))
         )
         
         if last_saved_epoch != epoch and epoch % args.save_interval == 0:
@@ -230,7 +242,7 @@ def main():
         if args.lr_update_per_epoch:
             task.update_lr_epoch()
 
-        n_iter_epoch += len(train_loader)
+        n_iter_epoch += train_epoch_iter
 
     if last_saved_epoch != args.n_epoch:
         # saving the last epoch if n_epoch is not divisible by save_interval
