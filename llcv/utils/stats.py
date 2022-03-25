@@ -32,7 +32,7 @@ def get_eta(elapsed, finished, total):
     else:
         return fmt_elapse_time(elapsed*(total - finished)/finished)
 
-def sprint_stats(var, name='', fmt='%.3g', cvt=lambda x: x):
+def sprint_stats(var, name='', fmt='%.2f', cvt=lambda x: x):
     var = np.asarray(var)
     
     if name:
