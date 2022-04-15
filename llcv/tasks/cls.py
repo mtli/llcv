@@ -52,14 +52,17 @@ class ClsTask(BaseTask):
         self.y_out_all = torch.empty((0, self.num_classes), dtype=torch.float, device=self.output_device)
 
     def forward(self, data):
-        x_cpu, y_cpu = data
-        if isinstance(self.model, nn.DataParallel):
+        x, y = data
+        if not isinstance(self.model, nn.DataParallel):
             # DataParallel's broadcast is much faster than
             # manually moving data to the first GPU
-            x = x_cpu
+            x = x.to(self.device)
+        if y.is_cuda:
+            if self.gather and not self.gpu_gather:
+                y_cpu = y.cpu()            
         else:
-            x = x_cpu.to(self.device)
-        y = y_cpu.to(self.device)
+            y_cpu = y
+            y = y.to(self.device)
 
         y_out = self.model(x)
         self.loss = self.criterion(y_out, y)

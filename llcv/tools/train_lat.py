@@ -6,6 +6,15 @@ throughput.
 
 This script runs on a single GPU without dataloader prefetching.
 '''
+
+# We observe empirically that by limiting the threads,
+# timing becomes more stable, and the model runs faster
+
+import os
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['NUMEXPR_NUM_THREADS'] = '1'
+os.environ['OMP_NUM_THREADS'] = '1'
+
 import logging
 
 import numpy as np
@@ -14,7 +23,7 @@ import torch
 from ..datasets import build_loader
 from ..tasks import build_task
 from ..utils import get_default_parser, env_setup, \
-    Timer, get_eta
+    Timer, get_eta, get_batchsize
 
 
 def add_args(parser):
@@ -78,7 +87,9 @@ def main():
     ## Argument parser and environment setup
     parser = get_default_parser('llcv - training latency script')
     add_args(parser)
-    args = env_setup(parser, 'train', ['data_root', 'pretrain'])
+    args = env_setup(parser, 'train-lat', ['data_root', 'pretrain'])
+    if args.use_cuda:
+        torch.backends.cudnn.benchmark = True
 
     ## Prepare the dataloader
     train_loader = build_loader(args, is_train=True)
@@ -92,6 +103,8 @@ def main():
         train_epoch_iter = args.epoch_iter
     else:
         train_epoch_iter = len(train_loader)
+    if args.to_cuda_before_task:
+        device = torch.cuda.current_device()
 
     ## Initialize task
     task = build_task(args, train_loader, is_train=True)
@@ -123,7 +136,13 @@ def main():
         for i, data in enumerate(train_loader):
             i += 1
             # the last batch can be smaller than normal
-            this_batch_size = len(data[0]) if isinstance(data, tuple) else len(data)
+            this_batch_size = get_batchsize(data)
+
+            if args.to_cuda_before_task:
+                if isinstance(data, (list, tuple)):
+                    data = [x.to(device) for x in data]
+                else:
+                    data = data.to(device)
 
             torch.cuda.synchronize()
             tmr_iter = Timer()

@@ -6,7 +6,7 @@ import torch
 from ..datasets import build_loader
 from ..tasks import build_task
 from ..utils import get_default_parser, env_setup, \
-    Timer, get_eta, dist_get_world_size
+    Timer, get_eta, dist_get_world_size, get_batchsize
 
 
 def add_args(parser):
@@ -50,34 +50,42 @@ def main():
     args = env_setup(parser, 'test', ['data_root', 'ckpt', 'out_dir'])
     if args.use_cuda:
         torch.backends.cudnn.benchmark = True
-        
+    if args.inf_latency:
+        # We observe empirically that by limiting the threads,
+        # timing becomes more stable, and the model runs faster
+        import os
+        os.environ['MKL_NUM_THREADS'] = '1'
+        os.environ['NUMEXPR_NUM_THREADS'] = '1'
+        os.environ['OMP_NUM_THREADS'] = '1'
+
     ## Prepare the dataloader
     test_loader = build_loader(args, is_train=False)
     n_test = len(test_loader.dataset)
     logging.info(f'# of testing examples: {n_test}')
+    if args.to_cuda_before_task:
+        device = torch.cuda.current_device()
 
     ## Initialize task
     task = build_task(args, test_loader, is_train=False)
-    task.test_mode()
+    task.test_mode(gather=not args.inf_latency)
 
     ## Start testing
     n_seen = 0
     n_warpup = 0
     n_test_itr = len(test_loader)
-    timing_only = False
     if args.inf_latency:
         logging.info(
             'Timing mode is enabled. Please ensure that no other resource-intensive processes '
             'are running on the same machine'
         )
         if args.timing_iter < n_test_itr:
-            timing_only = True
             n_test_itr = args.timing_iter
             logging.info(
                 f'Timing-only mode enabled, and testing will '
                 f'exit after {n_test_itr} iterations.'
             )
         timing_samples = np.empty(n_test_itr)
+
     speed_ratio = dist_get_world_size()
     logging.info('Testing starts')
     tmr_test = Timer()
@@ -87,7 +95,13 @@ def main():
             break
 
         # the last batch can be smaller than normal
-        this_batch_size = len(data[0]) if isinstance(data, tuple) else len(data)
+        this_batch_size = get_batchsize(data)
+
+        if args.to_cuda_before_task:
+            if isinstance(data, (list, tuple)):
+                data = [x.to(device) for x in data]
+            else:
+                data = data.to(device)
 
         if args.inf_latency:
             torch.cuda.synchronize()
@@ -123,11 +137,11 @@ def main():
                     (1e3*timing_samples[start:i].mean())
             task.log_iter(prefix,  ', ETA: ' + get_eta(t_total, i, n_test_itr))
 
-    if not timing_only:
-        task.dist_gather(is_train=False)
-        task.summarize_test(args)
     if args.inf_latency:
         task.summarize_timing('inference latency', timing_samples, args.timing_warmup_iter, args.out_dir)
+    else:
+        task.dist_gather(is_train=False)
+        task.summarize_test(args)
 
     tmr_main.stop()
     logging.info(f'Testing finished with total elapsed time {tmr_main.elapsed(to_str=True)}')

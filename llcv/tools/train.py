@@ -5,7 +5,7 @@ import torch
 from ..datasets import build_loader
 from ..tasks import build_task
 from ..utils import get_default_parser, env_setup, \
-    Timer, get_eta, dist_get_world_size
+    Timer, get_eta, dist_get_world_size, get_batchsize
 
 
 def add_args(parser):
@@ -133,7 +133,7 @@ def main():
         for i, data in enumerate(train_loader):
             i += 1
             # the last batch can be smaller than normal
-            this_batch_size = len(data[0]) if isinstance(data, tuple) else len(data)
+            this_batch_size = get_batchsize(data)
 
             tmr_iter = Timer()
             task.forward(data)
@@ -186,7 +186,7 @@ def main():
             tmr_val = Timer()
             for i, data in enumerate(val_loader):
                 i += 1
-                this_batch_size = len(data[0]) if isinstance(data, tuple) else len(data)
+                this_batch_size = get_batchsize(data)
                 
                 tmr_iter = Timer()
                 with torch.no_grad():

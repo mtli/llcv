@@ -165,6 +165,8 @@ def get_default_parser(*args, **kwargs):
         help='force shuffle even during testing (useful for timing)')
     parser.add_argument('--no-cuda', action='store_false', dest='cuda', default=True,
         help='disable CUDA')
+    parser.add_argument('--to-cuda-before-task', action='store_true', default=False,
+        help='move to GPU in the top-level script (for timing purposes)') 
     parser.add_argument('--gpu-gather', action='store_true',
         help='use GPU to gather outputs over the entire dataset (keep it off for large datasets)')
     parser.add_argument('--log-env-info', action='store_true', default=False,

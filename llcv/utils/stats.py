@@ -8,6 +8,9 @@ import numpy as np
 import torch
 
 
+def get_batchsize(data):
+    return len(data[0]) if isinstance(data, (list, tuple)) else len(data)
+
 def get_timestamp():
     return str(datetime.now()).replace(' ', '_').replace(':', '-')
 
