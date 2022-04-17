@@ -48,15 +48,6 @@ def main():
     parser = get_default_parser('llcv - testing script')
     add_args(parser)
     args = env_setup(parser, 'test', ['data_root', 'ckpt', 'out_dir'])
-    if args.use_cuda:
-        torch.backends.cudnn.benchmark = True
-    if args.inf_latency:
-        # We observe empirically that by limiting the threads,
-        # timing becomes more stable, and the model runs faster
-        import os
-        os.environ['MKL_NUM_THREADS'] = '1'
-        os.environ['NUMEXPR_NUM_THREADS'] = '1'
-        os.environ['OMP_NUM_THREADS'] = '1'
 
     ## Prepare the dataloader
     test_loader = build_loader(args, is_train=False)
@@ -76,7 +67,7 @@ def main():
     if args.inf_latency:
         logging.info(
             'Timing mode is enabled. Please ensure that no other resource-intensive processes '
-            'are running on the same machine'
+            'are running on the same machine.'
         )
         if args.timing_iter < n_test_itr:
             n_test_itr = args.timing_iter

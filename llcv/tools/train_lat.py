@@ -7,14 +7,6 @@ throughput.
 This script runs on a single GPU without dataloader prefetching.
 '''
 
-# We observe empirically that by limiting the threads,
-# timing becomes more stable, and the model runs faster
-
-import os
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['OMP_NUM_THREADS'] = '1'
-
 import logging
 
 import numpy as np
@@ -88,9 +80,7 @@ def main():
     parser = get_default_parser('llcv - training latency script')
     add_args(parser)
     args = env_setup(parser, 'train-lat', ['data_root', 'pretrain'])
-    if args.use_cuda:
-        torch.backends.cudnn.benchmark = True
-
+    
     ## Prepare the dataloader
     train_loader = build_loader(args, is_train=True)
     logging.info(f'# of classes: {len(train_loader.dataset.classes)}')

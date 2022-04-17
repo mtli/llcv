@@ -166,9 +166,11 @@ def get_default_parser(*args, **kwargs):
     parser.add_argument('--no-cuda', action='store_false', dest='cuda', default=True,
         help='disable CUDA')
     parser.add_argument('--to-cuda-before-task', action='store_true', default=False,
-        help='move to GPU in the top-level script (for timing purposes)') 
+        help='move to GPU in the top-level script (for timing purposes)')
     parser.add_argument('--gpu-gather', action='store_true',
         help='use GPU to gather outputs over the entire dataset (keep it off for large datasets)')
+    parser.add_argument('--no-cudnn-benchmark', action='store_false', dest='cudnn_benchmark', default=True,
+        help='disable cuDNN benchmark for size-varying tasks (e.g., variable image resolution and two-stage detectors)')
     parser.add_argument('--log-env-info', action='store_true', default=False,
         help='log the environment info at the beginning of the program')
     parser.add_argument('--no-ext', action='store_false', dest='ext', default=True,
@@ -280,6 +282,9 @@ def env_setup(parser, task_name='', path_fields=[]):
         logging.warning('gpu_gather is turned off since CUDA is off')
         args.gpu_gather = False
 
+    if args.cudnn_benchmark:
+        torch.backends.cudnn.benchmark = True
+        
     if rank <= 0:
         json.dump(
             vars(args),

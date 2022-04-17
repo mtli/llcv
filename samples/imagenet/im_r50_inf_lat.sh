@@ -10,6 +10,13 @@ ssdDir="/scratch/mengtial"
 expName=im_r50
 
 
+# We observe empirically that by limiting the threads,
+# timing becomes more stable, and the model runs faster
+export MKL_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+
+
 python -m llcv.tools.test \
 	--exp-dir "${dataDir}/Exp/ImageNet/train/${expName}" \
 	--dataset ImageNet \
