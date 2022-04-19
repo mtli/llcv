@@ -122,11 +122,11 @@ def main():
             ave_speed *= speed_ratio
 
             prefix = 'test: %4d/%4d, %5.4gHz, ' % (i, n_test_itr, ave_speed)
-            if args.inf_latency:
-                start = 0 if i <= args.timing_warmup_iter else args.timing_warmup_iter
+            if args.inf_latency and i > args.timing_warmup_iter:
                 prefix += '%5.4gms, ' % \
-                    (1e3*timing_samples[start:i].mean())
-            task.log_iter(prefix,  ', ETA: ' + get_eta(t_total, i, n_test_itr))
+                    (1e3*timing_samples[args.timing_warmup_iter:i].mean())
+            if not args.inf_latency or i > args.timing_warmup_iter:
+                task.log_iter(prefix,  ', ETA: ' + get_eta(t_total, i, n_test_itr))
 
     if args.inf_latency:
         task.summarize_timing('inference latency', timing_samples, args.timing_warmup_iter, args.out_dir)
