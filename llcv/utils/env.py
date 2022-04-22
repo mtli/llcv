@@ -146,9 +146,12 @@ class OptsAction(argparse.Action):
 def get_default_parser(*args, **kwargs):
     parser = argparse.ArgumentParser(*args, **kwargs)
     parser.add_argument('--exp-dir', type=str, required=True, help='experiment directory')
-    # parser.add_argument('--exp-dir', type=str, default='debug', help='experiment directory')
     parser.add_argument('--task', type=str, default='ClsTask',
         help='task')
+    parser.add_argument('--dataset', type=str, default='CIFAR10',
+        help='dataset')
+    parser.add_argument('--data-root', type=str, required=True,
+        help='root directory of the dataset')
     parser.add_argument('--data-opts', nargs='+', action=OptsAction, default={},
         help='data options in a dict')
     parser.add_argument('--model', type=str, default='ResNet',
@@ -228,17 +231,15 @@ class LevelSpecificFormatter(logging.Formatter):
         
 def env_setup(parser, task_name='', path_fields=[]):
     args = parser.parse_args()
-    if 'exp_dir' not in path_fields:
-        path_fields.append('exp_dir')
     args_expanduser(args, path_fields)
 
-    if args.local_rank is None:
+    if not hasattr(args, 'local_rank') or args.local_rank is None:
         rank = -1
     else:
         dist_init(args)
         rank = dist_get_rank()
 
-    if rank <= 0:
+    if rank <= 0 and hasattr(args, 'exp_dir'):
         # non-distributed or master
         if hasattr(args, 'reset') and args.reset:
             print('Confirm to delete existing checkpoints and logs (Y/N)? ', end='')
@@ -257,8 +258,9 @@ def env_setup(parser, task_name='', path_fields=[]):
     handlers = [logging.StreamHandler()]
     if rank <= 0:
         # non-distributed or master
-        log_path = join(args.exp_dir, f'{task_name}_{get_timestamp()}.log')
-        handlers.append(logging.FileHandler(log_path, 'w'))
+        if hasattr(args, 'exp_dir'):
+            log_path = join(args.exp_dir, f'{task_name}_{get_timestamp()}.log')
+            handlers.append(logging.FileHandler(log_path, 'w'))
 
         logger.setLevel(log_level)
     else:
@@ -270,7 +272,7 @@ def env_setup(parser, task_name='', path_fields=[]):
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-    if args.seed is not None:
+    if hasattr(args, 'seed') and args.seed is not None:
         random.seed(args.seed)
         np.random.seed(args.seed)
         torch.manual_seed(args.seed)
@@ -285,7 +287,7 @@ def env_setup(parser, task_name='', path_fields=[]):
     if args.cudnn_benchmark:
         torch.backends.cudnn.benchmark = True
         
-    if rank <= 0:
+    if rank <= 0 and hasattr(args, 'exp_dir'):
         json.dump(
             vars(args),
             open(join(args.exp_dir, f'{task_name}-args.json'), 'w'),
@@ -298,7 +300,7 @@ def env_setup(parser, task_name='', path_fields=[]):
         logging.info(
             'Environment and settings:\n' + \
             get_env_info(use_cuda=args.use_cuda, to_str=True) + \
-            f'- exp_dir: {args.exp_dir}'
+            (f'- exp_dir: {args.exp_dir}' if  hasattr(args, 'exp_dir') else '')
         )
 
     return args

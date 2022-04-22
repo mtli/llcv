@@ -10,10 +10,6 @@ from ..utils import get_default_parser, env_setup, \
 
 def add_args(parser):
     ## Basic options
-    parser.add_argument('--dataset', type=str, default='CIFAR10',
-        help='dataset')
-    parser.add_argument('--data-root', type=str, required=True,
-        help='root directory of the dataset')
     parser.add_argument('--n-epoch', type=int, default=20,
         help='# of epochs to train')
     parser.add_argument('--batch-size', type=int, default=128,
@@ -78,7 +74,7 @@ def main():
     ## Argument parser and environment setup
     parser = get_default_parser('llcv - training script')
     add_args(parser)
-    args = env_setup(parser, 'train', ['data_root', 'pretrain'])
+    args = env_setup(parser, 'train', ['exp_dir', 'data_root', 'pretrain'])
 
     ## Prepare the dataloader
     train_loader = build_loader(args, is_train=True)

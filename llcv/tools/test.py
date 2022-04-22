@@ -11,10 +11,6 @@ from ..utils import get_default_parser, env_setup, \
 
 def add_args(parser):
     ## Basic options
-    parser.add_argument('--dataset', type=str, default='CIFAR10',
-        help='dataset')
-    parser.add_argument('--data-root', type=str, required=True,
-        help='root directory of the dataset')
     parser.add_argument('--batch-size', type=int, default=256,
         help='batch size for testing')
     parser.add_argument('--n-worker', type=int, default=8,
@@ -47,7 +43,7 @@ def main():
     ## Argument parser and environment setup
     parser = get_default_parser('llcv - testing script')
     add_args(parser)
-    args = env_setup(parser, 'test', ['data_root', 'ckpt', 'out_dir'])
+    args = env_setup(parser, 'test', ['exp_dir', 'data_root', 'ckpt', 'out_dir'])
 
     ## Prepare the dataloader
     test_loader = build_loader(args, is_train=False)
