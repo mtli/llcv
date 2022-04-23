@@ -62,6 +62,8 @@ class DetTask(BaseTask):
                     })
 
     def log_iter(self, str_prefix='', str_suffix=''):
+        if str_suffix:
+            str_suffix = str_suffix[2:] # remove ', '
         logging.info(f'{str_prefix}{str_suffix}')
 
     def eval_ccf(self, results_ccf):
