@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import torch
 
-from ..datasets import build_loader
+from ..data import build_loader
 from ..tasks import build_task
 from ..utils import get_default_parser, env_setup, \
     Timer, get_eta, dist_get_world_size, get_batchsize
