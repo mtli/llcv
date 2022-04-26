@@ -25,6 +25,7 @@ class BaseTask(metaclass=ABCMeta):
         self.device = args.device
         self.gather = False
         self.gpu_gather = args.gpu_gather
+        self.fp16 = args.fp16
         self.resume_epoch = 0
         self.has_val_score = False
         self.exp_dir = args.exp_dir
@@ -56,7 +57,7 @@ class BaseTask(metaclass=ABCMeta):
             logging.debug(f'Optimizer: {args.optim} with base learning rate {args.lr:.6g}')
             self.set_optim(args)
             self.set_lr_schedule(args)
-
+            self.scaler = torch.cuda.amp.GradScaler(enabled=self.fp16)
         self.auto_load(args)
 
     def set_optim(self, args):
@@ -186,6 +187,8 @@ class BaseTask(metaclass=ABCMeta):
         else:
             out_dict['model'] = self.model.state_dict()
         out_dict['optim'] = self.optim.state_dict()
+        if hasattr(self, 'scaler'):
+            out_dict['scaler'] = self.scaler.state_dict()
         if hasattr(self, 'lr_scheduler'):
             out_dict['lr_scheduler'] = self.lr_scheduler.state_dict()
         # using a temporary file first to prevent getting
@@ -207,6 +210,8 @@ class BaseTask(metaclass=ABCMeta):
                 self.optim.load_state_dict(ckpt['optim'])
             if hasattr(self, 'lr_scheduler') and 'lr_scheduler' in ckpt:
                 self.lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
+            if hasattr(self, 'scaler') and 'scaler' in ckpt:
+                self.scaler.load_state_dict(ckpt['scaler'])
         else:
             # simple model-state-dict format
             model_state_dict = ckpt

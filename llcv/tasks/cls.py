@@ -52,36 +52,38 @@ class ClsTask(BaseTask):
         self.y_out_all = torch.empty((0, self.num_classes), dtype=torch.float, device=self.output_device)
 
     def forward(self, data):
-        x, y = data
-        if not isinstance(self.model, nn.DataParallel):
-            # DataParallel's broadcast is much faster than
-            # manually moving data to the first GPU
-            x = x.to(self.device)
-        if y.is_cuda:
-            if self.gather and not self.gpu_gather:
-                y_cpu = y.cpu()            
-        else:
-            y_cpu = y
-            y = y.to(self.device)
-
-        y_out = self.model(x)
-        self.loss = self.criterion(y_out, y)
-        self.avg_loss.update(self.loss.item(), len(x))
-
-        self.accu = topk_accu(y_out, y, (1, 5))
-        
-        if self.gather:
-            if self.gpu_gather:
-                self.y_all = torch.cat([self.y_all, y])
-                self.y_out_all = torch.cat([self.y_out_all, y_out])
+        with torch.cuda.amp.autocast(enabled=self.fp16):
+            x, y = data
+            if not isinstance(self.model, nn.DataParallel):
+                # DataParallel's broadcast is much faster than
+                # manually moving data to the first GPU
+                x = x.to(self.device)
+            if y.is_cuda:
+                if self.gather and not self.gpu_gather:
+                    y_cpu = y.cpu()            
             else:
-                self.y_all = torch.cat([self.y_all, y_cpu])
-                self.y_out_all = torch.cat([self.y_out_all, y_out.cpu()])
+                y_cpu = y
+                y = y.to(self.device)
+
+            y_out = self.model(x)
+            self.loss = self.criterion(y_out, y)
+            self.avg_loss.update(self.loss.item(), len(x))
+
+            self.accu = topk_accu(y_out, y, (1, 5))
+            
+            if self.gather:
+                if self.gpu_gather:
+                    self.y_all = torch.cat([self.y_all, y])
+                    self.y_out_all = torch.cat([self.y_out_all, y_out])
+                else:
+                    self.y_all = torch.cat([self.y_all, y_cpu])
+                    self.y_out_all = torch.cat([self.y_out_all, y_out.cpu()])
 
     def backward(self):
+        self.scaler.scale(self.loss).backward()
+        self.scaler.step(self.optim)
+        self.scaler.update()
         self.optim.zero_grad()
-        self.loss.backward()
-        self.optim.step()
 
     def log_iter(self, str_prefix='', str_suffix=''):
         logging.info(f'{str_prefix}loss: {self.loss.item():5.3g}, top-1: {self.accu[0]:5.4g}%, top-5: {self.accu[1]:5.4g}%{str_suffix}')

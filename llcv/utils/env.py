@@ -176,6 +176,8 @@ def get_default_parser(*args, **kwargs):
         help='use GPU to gather outputs over the entire dataset (keep it off for large datasets)')
     parser.add_argument('--no-cudnn-benchmark', action='store_false', dest='cudnn_benchmark', default=True,
         help='disable cuDNN benchmark for size-varying tasks (e.g., variable image resolution and two-stage detectors)')
+    parser.add_argument('--fp16', action='store_true', default=False,
+        help='mixed-precision training and fp16 inference')
     parser.add_argument('--log-env-info', action='store_true', default=False,
         help='log the environment info at the beginning of the program')
     parser.add_argument('--no-ext', action='store_false', dest='ext', default=True,
