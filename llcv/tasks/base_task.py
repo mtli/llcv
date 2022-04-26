@@ -18,9 +18,9 @@ from ..models import build_model
 from ..utils import dist_get_rank, sprint_stats
 
 class BaseTask(metaclass=ABCMeta):
-    def __init__(self, args, loader, is_train):
+    def __init__(self, args, loader, dataset, is_train):
         self.loader = loader
-        self.dataset = loader.dataset
+        self.dataset = dataset
         self.is_train = is_train
         self.device = args.device
         self.gather = False

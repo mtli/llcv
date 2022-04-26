@@ -13,8 +13,8 @@ from .base_task import BaseTask
 
 
 class DetTask(BaseTask):
-    def __init__(self, args, loader, is_train):
-        super().__init__(args, loader, is_train)
+    def __init__(self, args, loader, dataset, is_train):
+        super().__init__(args, loader, dataset, is_train)
         assert not is_train, 'Training is not implemented'
         assert self.rank == -1, 'Distributed is not supported'
         self.test_no_gt = hasattr(self.dataset, 'no_gt') and self.dataset.no_gt

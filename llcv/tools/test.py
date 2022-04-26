@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import torch
 
-from ..data import build_loader
+from ..data import build_dataset_and_loader
 from ..tasks import build_task
 from ..utils import get_default_parser, env_setup, \
     Timer, get_eta, dist_get_world_size, get_batchsize
@@ -46,14 +46,14 @@ def main():
     args = env_setup(parser, 'test', ['exp_dir', 'data_root', 'ckpt', 'out_dir'])
 
     ## Prepare the dataloader
-    test_loader = build_loader(args, is_train=False)
-    n_test = len(test_loader.dataset)
+    test_dataset, test_loader = build_dataset_and_loader(args, is_train=False)
+    n_test = len(test_dataset)
     logging.info(f'# of testing examples: {n_test}')
     if args.to_cuda_before_task:
         device = torch.cuda.current_device()
 
     ## Initialize task
-    task = build_task(args, test_loader, is_train=False)
+    task = build_task(args, test_loader, test_dataset, is_train=False)
     task.test_mode(gather=not args.inf_latency)
 
     ## Start testing

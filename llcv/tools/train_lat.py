@@ -12,7 +12,7 @@ import logging
 import numpy as np
 import torch
 
-from ..data import build_loader
+from ..data import build_dataset_and_loader
 from ..tasks import build_task
 from ..utils import get_default_parser, env_setup, \
     Timer, get_eta, get_batchsize
@@ -78,9 +78,9 @@ def main():
     args = env_setup(parser, 'train-lat', ['exp_dir', 'data_root', 'pretrain'])
     
     ## Prepare the dataloader
-    train_loader = build_loader(args, is_train=True)
-    logging.info(f'# of classes: {len(train_loader.dataset.classes)}')
-    n_train = len(train_loader.dataset)
+    train_dataset, train_loader = build_dataset_and_loader(args, is_train=True)
+    logging.info(f'# of classes: {len(train_dataset.classes)}')
+    n_train = len(train_dataset)
     logging.info(f'# of training examples: {n_train}')
     assert n_train
     if args.epoch_iter < len(train_loader):
@@ -93,7 +93,7 @@ def main():
         device = torch.cuda.current_device()
 
     ## Initialize task
-    task = build_task(args, train_loader, is_train=True)
+    task = build_task(args, train_loader, train_dataset, is_train=True)
 
     if task.resume_epoch >= args.n_epoch:
         logging.warning(f'The model is already trained for {task.resume_epoch} epochs')

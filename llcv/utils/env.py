@@ -154,6 +154,8 @@ def get_default_parser(*args, **kwargs):
         help='root directory of the dataset')
     parser.add_argument('--data-opts', nargs='+', action=OptsAction, default={},
         help='data options in a dict')
+    parser.add_argument('--ffcv', action='store_true', default=False,
+        help='use ffcv for data loading')
     parser.add_argument('--model', type=str, default='ResNet',
         help='network model')
     parser.add_argument('--model-opts', nargs='+', action=OptsAction, default={},

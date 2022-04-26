@@ -18,8 +18,8 @@ from ..utils import AverageMeter, topk_accu, dist_cpu_gather, dist_gpu_gather
 
 
 class ClsTask(BaseTask):
-    def __init__(self, args, loader, is_train):
-        super().__init__(args, loader, is_train)
+    def __init__(self, args, loader, dataset, is_train):
+        super().__init__(args, loader, dataset, is_train)
         self.test_no_gt = hasattr(self.dataset, 'no_gt') and self.dataset.no_gt
         self.num_classes = len(self.dataset.classes)
         self.has_val_score = not self.test_no_gt

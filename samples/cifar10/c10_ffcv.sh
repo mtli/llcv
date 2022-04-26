@@ -10,6 +10,7 @@ python -m llcv.tools.train \
 	--exp-dir "${dataDir}/Exp/CIFAR-10/train/${expName}" \
 	--dataset CIFAR10 \
 	--data-root "${dataDir}/SmallDB/CIFAR-10" \
+	--ffcv \
 	--n-epoch 200 \
 	--batch-size 128 \
 	--n-worker 8 \
@@ -19,6 +20,7 @@ python -m llcv.tools.test \
 	--exp-dir "${dataDir}/Exp/CIFAR-10/train/${expName}" \
 	--dataset CIFAR10 \
 	--data-root "${dataDir}/SmallDB/CIFAR-10" \
+	--ffcv \
 	--out-dir "${dataDir}/Exp/CIFAR-10/test/${expName}" \
 	--batch-size 2048 \
 	--n-worker 16 \
